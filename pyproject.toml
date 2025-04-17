@@ -1,0 +1,24 @@
+[project]
+name = "demo-driven"
+version = "0.1.0"
+description = "A lightweight CLI tool that enables Demo-Driven Development in Python."
+authors = [
+    { name = "John Lin", email = "jihghong@gmail.com" },
+    { name = "ChatGPT 4o" }
+]
+readme = "README.md"
+requires-python = ">=3.7"
+license = { text = "MIT" }
+keywords = ["demo", "testing", "refactor", "regression", "automation", "cli"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent"
+]
+
+[project.scripts]
+demo = "demo_driven.cli:main"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"

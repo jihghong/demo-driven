@@ -1,0 +1,8 @@
+Test 1: simple integers
+Result: [1, 2, 3]
+Test 2: already sorted
+Result: [1, 2, 3]
+Test 3: with duplicates
+Result: [1, 2, 4, 4]
+Test 4: empty list
+Result: []
