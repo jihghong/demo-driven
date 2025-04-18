@@ -6,7 +6,7 @@ import subprocess
 from pathlib import Path
 import sys
 
-DEMO_DIR = Path(__file__).resolve().parent.parent / "demo"
+DEMO_DIR = Path.cwd() / "demo"
 
 
 def run_demo(name: str):
