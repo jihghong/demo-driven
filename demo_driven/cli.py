@@ -6,14 +6,23 @@ import subprocess
 from pathlib import Path
 import sys
 
-DEMO_DIR = Path.cwd() / "demo"
+CONFIG_FILE = ".ddrun_dir"
 
+def save_dir_config(demo_dir: Path):
+    Path(CONFIG_FILE).write_text(demo_dir.name)
 
-def run_demo(name: str):
-    py_file = DEMO_DIR / f"{name}.py"
-    out_file = DEMO_DIR / f"{name}.txt"
-    html_file = DEMO_DIR / f"{name}.html"
-    old_file = DEMO_DIR / f"{name}.txt.old"
+def load_dir_config() -> Path:
+    try:
+        name = Path(CONFIG_FILE).read_text().strip()
+        return Path.cwd() / name
+    except FileNotFoundError:
+        return Path.cwd() / "demo"
+
+def run_demo(name: str, demo_dir: Path):
+    py_file = demo_dir / f"{name}.py"
+    out_file = demo_dir / f"{name}.txt"
+    html_file = demo_dir / f"{name}.html"
+    old_file = demo_dir / f"{name}.txt.old"
 
     if not py_file.exists():
         print(f"{name}: script not found")
@@ -42,8 +51,7 @@ def run_demo(name: str):
             out_file.rename(old_file)
         out_file.write_text(output)
 
-        from difflib import HtmlDiff
-        html = HtmlDiff().make_file(
+        html = difflib.HtmlDiff().make_file(
             baseline.splitlines(), output.splitlines(),
             fromdesc=f"previous output ({name}.txt.old)",
             todesc=f"current output ({name}.txt)")
@@ -51,10 +59,9 @@ def run_demo(name: str):
         html_file.write_text(html, encoding="utf-8")
         print(f"{name}: output changed, see {html_file.name}")
 
-
-def accept_demo(name: str):
-    html_file = DEMO_DIR / f"{name}.html"
-    old_file = DEMO_DIR / f"{name}.txt.old"
+def accept_demo(name: str, demo_dir: Path):
+    html_file = demo_dir / f"{name}.html"
+    old_file = demo_dir / f"{name}.txt.old"
 
     if not old_file.exists():
         print(f"{name}: nothing to accept")
@@ -65,41 +72,40 @@ def accept_demo(name: str):
             f.unlink()
     print(f"{name}: accepted")
 
-
-def run_all():
-    for file in sorted(DEMO_DIR.glob("*.py")):
+def run_all(demo_dir: Path):
+    for file in sorted(demo_dir.glob("*.py")):
         name = file.stem
-        run_demo(name)
+        run_demo(name, demo_dir)
 
-
-def accept_all():
-    for file in sorted(DEMO_DIR.glob("*.py")):
+def accept_all(demo_dir: Path):
+    for file in sorted(demo_dir.glob("*.py")):
         name = file.stem
-        accept_demo(name)
-
+        accept_demo(name, demo_dir)
 
 def main():
     parser = argparse.ArgumentParser(description="Run and manage demo-driven output scripts")
     parser.add_argument("names", nargs="*", help="Run one or more demo scripts by name")
     parser.add_argument("-a", "--accept", action="store_true", help="Accept mode for positional names (or all if none specified)")
-    parser.add_argument("-r", "--run-all", action="store_true", help="Run all demos")
+    parser.add_argument("-d", "--dir", help="Directory containing demo scripts")
     args = parser.parse_args()
+
+    if args.dir:
+        demo_dir = Path.cwd() / args.dir
+        save_dir_config(demo_dir)
+    else:
+        demo_dir = load_dir_config()
 
     if args.accept:
         if args.names:
             for name in args.names:
-                accept_demo(name)
+                accept_demo(name, demo_dir)
         else:
-            accept_all()
-    elif args.run_all:
-        if args.names:
-            print("[WARN] Ignoring positional names when using -r/--run-all.")
-        run_all()
+            accept_all(demo_dir)
     elif args.names:
         for name in args.names:
-            run_demo(name)
+            run_demo(name, demo_dir)
     else:
-        parser.print_help()
+        run_all(demo_dir)
 
 
 if __name__ == "__main__":

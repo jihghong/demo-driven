@@ -17,7 +17,7 @@ classifiers = [
 ]
 
 [project.scripts]
-demo = "demo_driven.cli:main"
+ddrun = "demo_driven.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["demo_driven"]
