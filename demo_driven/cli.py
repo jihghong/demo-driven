@@ -14,7 +14,8 @@ CONFIG_FILE = ".ddrun_dir"
 
 
 def save_dir_config(demo_dir: Path):
-    Path(CONFIG_FILE).write_text(demo_dir.name)
+    relative = demo_dir.relative_to(Path.cwd())
+    Path(CONFIG_FILE).write_text(str(relative))
 
 
 def load_dir_config() -> Path:
