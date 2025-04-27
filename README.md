@@ -8,7 +8,7 @@ Demo-Driven Development made easy.
 
 ## Features
 
-- Captures and stores printed output from demo scripts
+- Captures and stores printed output from demo scripts (`.py`) and Jupyter notebooks (`.ipynb`)
 - Lock in output results for future refactor safety
 - Generates `.html` and `.txt.old` files when behavior changes
 - Accept new behavior only when explicitly reviewed
@@ -33,12 +33,12 @@ pip install demo-driven
 ddrun hello
 ```
 
-This runs `demo/hello.py` and compares its output against `demo/hello.txt`.
+This runs `demo/hello.py` or `demo/hello.ipynb` and compares the output against `demo/hello.py.txt` or `demo/hello.ipynb.txt`.
 
-If `demo/hello.txt` does not exist, it will be created with the current output.
+If the corresponding `.txt` file does not exist, it will be created with the current output.
 If the output has changed since the last run:
-- The old `hello.txt` will be renamed to `hello.txt.old`
-- A visual diff will be generated and saved as `hello.html` for you to review in a browser
+- The old `.txt` file will be renamed to `.txt.old` (e.g., `hello.py.txt.old`)
+- A visual diff will be generated and saved as `.html` for you to review in a browser
 
 ### Accept new output
 
@@ -78,17 +78,17 @@ You can also use `-d` together with a specific demo name:
 ```bash
 ddrun -d usage hello
 ```
-This sets `usage` as the new default directory and runs `usage/hello.py`.
+This sets `usage` as the new default directory and runs `usage/hello.py` or `usage/hello.ipynb`.
 
 ---
 
 ## Example Workflow
 
-1. Write your expected usage as runnable scripts in `demo/hello.py` and `demo/sorting.py`
+1. Write your expected usage as runnable scripts in `demo/hello.py`, `demo/sorting.py`, and/or `demo/hello.ipynb`
 2. Run them with `ddrun hello`, `ddrun sorting`, or simply `ddrun` to run all demos
-3. The printed output will be saved into `demo/hello.txt` and `demo/sorting.txt`
+3. The printed output will be saved into `demo/hello.py.txt`, `demo/sorting.py.txt`, or `demo/hello.ipynb.txt`
 4. If you later modify your code and the output differs from what's stored:
-   - A `.txt.old` file will be created to preserve the previous result
+   - A `.txt.old` file will be created to preserve the previous result (e.g., `hello.py.txt.old`)
    - An `.html` file will be generated to visualize the diff for review
 
    For example, if you accidentally break the logic in `demo/sorting.py`, repeated runs of `ddrun sorting` will keep warning that the output has changed, until you fix the bug and the output matches again. Once matched, `.txt.old` and `.html` will be automatically deleted.
@@ -97,8 +97,10 @@ This sets `usage` as the new default directory and runs `usage/hello.py`.
    - Run `ddrun -a sorting` to accept the new output for the specified demo script
    - Or run `ddrun -a` to accept all updated outputs
 
-6. When the demo results are confirmed, commit both `.py` and `.txt` files into version control. These `.txt` files serve as the reference for future comparisons.
+6. When the demo results are confirmed, commit both `.py`, `.ipynb`, and `.txt` files into version control. These `.txt` files serve as the reference for future comparisons.
    - Re-run all demos with `ddrun` to check whether any behavior has changed
+
+For a full real-world example, see the [demo/](demo/) subdirectory.
 
 ---
 
