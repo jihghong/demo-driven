@@ -16,6 +16,7 @@ CONFIG_FILE = ".ddrun_dir"
 def save_dir_config(demo_dir: Path):
     relative = demo_dir.relative_to(Path.cwd())
     Path(CONFIG_FILE).write_text(str(relative))
+    print(f"Target directory is set to '{relative}'")
 
 
 def load_dir_config() -> Path:
@@ -36,7 +37,12 @@ def run_demo(name: str, demo_dir: Path):
         print(f"{name}.py: script not found")
         return
 
-    result = subprocess.run([sys.executable, str(py_file)], capture_output=True, text=True)
+    result = subprocess.run(
+        [sys.executable, str(py_file)],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True
+    )
     output = result.stdout
 
     if not out_file.exists():
@@ -64,7 +70,8 @@ def run_demo(name: str, demo_dir: Path):
         html = difflib.HtmlDiff().make_file(
             baseline.splitlines(), output.splitlines(),
             fromdesc=f"previous output ({name}.py.txt.old)",
-            todesc=f"current output ({name}.py.txt)")
+            todesc=f"current output ({name}.py.txt)"
+        )
 
         html_file.write_text(html, encoding="utf-8")
         print(f"{name}.py: output changed, see {html_file.name}")
@@ -125,7 +132,8 @@ def run_ipynb_demo(name: str, demo_dir: Path):
         html = difflib.HtmlDiff().make_file(
             baseline.splitlines(), output.splitlines(),
             fromdesc=f"previous output ({name}.ipynb.txt.old)",
-            todesc=f"current output ({name}.ipynb.txt)")
+            todesc=f"current output ({name}.ipynb.txt)"
+        )
 
         html_file.write_text(html, encoding="utf-8")
         print(f"{name}.ipynb: output changed, see {html_file.name}")
@@ -173,17 +181,18 @@ def accept_all(demo_dir: Path):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Run and manage demo-driven output scripts")
-    parser.add_argument("names", nargs="*", help="Run one or more demo scripts by name")
-    parser.add_argument("-a", "--accept", action="store_true", help="Accept mode for positional names (or all if none specified)")
-    parser.add_argument("-d", "--dir", help="Directory containing demo scripts")
+    parser = argparse.ArgumentParser(description="Run demo scripts and manage their outputs")
+    parser.add_argument("names", nargs="*", help="Run the specified demo scripts, or run all if none are specified")
+    parser.add_argument("-a", "--accept", action="store_true", help="Accept the outputs of specified demo scripts, or accept all if none are specified")
+    parser.add_argument("-d", "--dir", help="Set the target directory containing demo scripts")
     args = parser.parse_args()
 
     if args.dir:
         demo_dir = Path.cwd() / args.dir
         save_dir_config(demo_dir)
-    else:
-        demo_dir = load_dir_config()
+        return
+
+    demo_dir = load_dir_config()
 
     if args.accept:
         if args.names:
