@@ -13,7 +13,8 @@ Demo-Driven Development made easy.
 - Generates `.html` and `.txt.old` files when behavior changes
 - Accept new behavior only when explicitly reviewed
 - Drive development through exploratory demo scripts
-- Persist preferred demo directory in `.ddrun_dir`
+- Persist preferred demo directory in `.dddir`
+- Includes `ddnbo`, a tool for checking and fixing notebook outputs to match actual execution
 
 ---
 
@@ -69,36 +70,69 @@ ddrun -d examples
 ```
 
 This will:
-- Store `examples` in `.ddrun_dir` as the default demo directory
-- Run all demo scripts inside `examples/`
+- Store `examples` in `.dddir` as the default demo directory
 
 Future commands (like `ddrun hello`, `ddrun -a`, etc.) will use `examples/` as the working demo directory until changed.
 
-You can also use `-d` together with a specific demo name:
+---
+
+## Notebook Output Checker
+
+The `ddnbo` command (short for Demo-Driven Notebook Output) checks or updates output cells inside Jupyter notebooks.
+
+If you have previously run `ddrun -d demo`, the same `.dddir` setting applies to `ddnbo`.
+
+### Check notebook outputs
+
 ```bash
-ddrun -d usage hello
+ddnbo
 ```
-This sets `usage` as the new default directory and runs `usage/hello.py` or `usage/hello.ipynb`.
+
+This executes each notebook and compares the actual outputs with the ones stored in notebook cells. It will report which code cells mismatch:
+
+```
+hello.ipynb: [1] mismatched
+sorting.ipynb: [2][3][4][5] mismatched
+```
+
+### Fix mismatched outputs or keep untouched
+
+```bash
+ddnbo -f
+```
+
+This re-executes each notebook to fix the mismatched outputs. If no output mismatch, the notebook is kept untouched.
+
+```
+hello.ipynb: outputs updated
+sorting.ipynb: outputs updated
+```
+
+### Force update all outputs
+
+```bash
+ddnbo -F
+```
+
+This will forcefully execute all code cells and update outputs in every notebook.
 
 ---
 
 ## Example Workflow
 
-1. Write your expected usage as runnable scripts in `demo/hello.py`, `demo/sorting.py`, and/or `demo/hello.ipynb`
+1. Write runnable demos in `demo/hello.py`, `demo/sorting.py`, and `demo/sorting.ipynb`
 2. Run them with `ddrun hello`, `ddrun sorting`, or simply `ddrun` to run all demos
-3. The printed output will be saved into `demo/hello.py.txt`, `demo/sorting.py.txt`, or `demo/hello.ipynb.txt`
-4. If you later modify your code and the output differs from what's stored:
-   - A `.txt.old` file will be created to preserve the previous result (e.g., `hello.py.txt.old`)
-   - An `.html` file will be generated to visualize the diff for review
+3. The printed output will be saved into `.txt` files (e.g., `demo/hello.py.txt`, `demo/sorting.ipynb.txt`)
+4. If you modify your code and the output changes:
+   - A `.txt.old` file will preserve the previous result
+   - An `.html` file will help visualize the differences
 
-   For example, if you accidentally break the logic in `demo/sorting.py`, repeated runs of `ddrun sorting` will keep warning that the output has changed, until you fix the bug and the output matches again. Once matched, `.txt.old` and `.html` will be automatically deleted.
-
-5. If the output changed because you intentionally updated the logic, you can accept the new result after reviewing it:
-   - Run `ddrun -a sorting` to accept the new output for the specified demo script
-   - Or run `ddrun -a` to accept all updated outputs
-
-6. When the demo results are confirmed, commit both `.py`, `.ipynb`, and `.txt` files into version control. These `.txt` files serve as the reference for future comparisons.
-   - Re-run all demos with `ddrun` to check whether any behavior has changed
+5. If the output changed because of an intentional update, accept the result using `ddrun -a hello` or `ddrun -a`
+6. Re-run `ddrun` anytime to verify whether demo behavior remains stable
+7. Use `ddnbo` to check or repair notebook outputs:
+   - Run `ddnbo` to check for mismatches
+   - Run `ddnbo -f` to fix only the notebooks with mismatched cells
+   - Run `ddnbo -F` to force all outputs to be regenerated
 
 For a full real-world example, see the [demo/](demo/) subdirectory.
 

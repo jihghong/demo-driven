@@ -9,13 +9,13 @@ def bubble_sort(arr):
 
 def run_tests():
     print("Test 1: simple integers")
-    print("Result:", bubble_sort([3, 1, 2]))
+    print("Result:", bubble_sort([5, 2, 3]))
 
     print("Test 2: already sorted")
     print("Result:", bubble_sort([1, 2, 3]))
 
     print("Test 3: with duplicates")
-    print("Result:", bubble_sort([4, 2, 4, 1]))
+    print("Result:", bubble_sort([2, 2, 1, 3]))
 
     print("Test 4: empty list")
     print("Result:", bubble_sort([]))
