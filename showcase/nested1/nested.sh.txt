@@ -1,0 +1,8 @@
+> 'ddrun -d' to show target directory
+Current target directory: "showcase/nested1"
+> 'ddrun -d showcase/nested2' to set target directory
+Target directory is set to "showcase/nested2"
+> 'ddrun nested' to run showcase/nested2/nested.sh, which will call showcase/option_d.sh
+nested.sh: output matches saved result
+> 'ddrun -d' to verify that the target directory is restored, even if the called nested scripts modify the .dddir setting
+Current target directory: "showcase/nested2"

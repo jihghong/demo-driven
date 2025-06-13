@@ -25,10 +25,10 @@ dependencies = [
 
 [project.scripts]
 ddrun = "demo_driven.ddrun:main"
-ddnbo = "demo_driven.ddnbo:main"
+ddnbo = "demo_driven.ddnb:ddnbo"
 
-[tool.setuptools.packages.find]
-include = ["demo_driven"]
+[tool.setuptools]
+packages = ["demo_driven"]
 
 [build-system]
 requires = ["setuptools>=61.0"]

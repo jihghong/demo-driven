@@ -1,0 +1,71 @@
+> initialize showcase/demo/current
+> 'ddrun -d showcase/demo/current' to set target directory
+Target directory is set to "showcase/demo/current"
+> 'ddrun' to run all demo scripts in showcase/demo/current
+hello.py: output saved
+hello.ipynb: output saved
+sorting.py: output saved
+sorting.ipynb: output saved
+> 'ddrun' to run all demo scripts again. Notice that the output messages have changed
+hello.py: output matches saved result
+hello.ipynb: output matches saved result
+sorting.py: output matches saved result
+sorting.ipynb: output matches saved result
+> 'diff -r showcase/demo/current showcase/demo/created' should produce no output because all files match
+> now modify demo scripts
+> 'ddrun' to run all demo scripts in showcase/demo/current
+hello.py: output changed, see hello.py.html
+hello.ipynb: output changed, see hello.ipynb.html
+sorting.py: output changed, see sorting.py.html
+sorting.ipynb: output changed, see sorting.ipynb.html
+> 'ddrun' to run all demo scripts again. Notice that the output messages are the same
+hello.py: output changed, see hello.py.html
+hello.ipynb: output changed, see hello.ipynb.html
+sorting.py: output changed, see sorting.py.html
+sorting.ipynb: output changed, see sorting.ipynb.html
+> 'diff -r showcase/demo/current showcase/demo/modified' should produce no output because all files match
+> now revert demo scripts
+> 'ddrun' to run all demo scripts in showcase/demo/current
+hello.py: output matches saved result
+hello.ipynb: output matches saved result
+sorting.py: output matches saved result
+sorting.ipynb: output matches saved result
+> 'ddrun' to run all demo scripts again. Notice that the output messages are the same
+hello.py: output matches saved result
+hello.ipynb: output matches saved result
+sorting.py: output matches saved result
+sorting.ipynb: output matches saved result
+> 'diff -r showcase/demo/current showcase/demo/reverted' should produce no output because all files match
+> now modify demo scripts again
+> 'ddrun' to run all demo scripts in showcase/demo/current
+hello.py: output changed, see hello.py.html
+hello.ipynb: output changed, see hello.ipynb.html
+sorting.py: output changed, see sorting.py.html
+sorting.ipynb: output changed, see sorting.ipynb.html
+> 'ddrun' to run all demo scripts again. Notice that the output messages are the same
+hello.py: output changed, see hello.py.html
+hello.ipynb: output changed, see hello.ipynb.html
+sorting.py: output changed, see sorting.py.html
+sorting.ipynb: output changed, see sorting.ipynb.html
+> 'ddrun -a' to accept all results in showcase/demo/current
+hello.py: accepted
+hello.ipynb: accepted
+sorting.py: accepted
+sorting.ipynb: accepted
+> 'ddrun -a' to accept all demo scripts again. Notice that the output messages have changed
+hello.py: nothing to accept
+hello.ipynb: nothing to accept
+sorting.py: nothing to accept
+sorting.ipynb: nothing to accept
+> 'diff -r showcase/demo/current showcase/demo/accepted' should produce no output because all files match
+> 'ddnbo' to check all notebook outputs in showcase/demo/current
+hello.ipynb: [1] mismatched
+sorting.ipynb: [2][3][4][5] mismatched
+> 'ddnbo -f' to fix all notebook outputs in showcase/demo/current
+hello.ipynb: outputs updated
+sorting.ipynb: outputs updated
+> 'ddnbo -f' to fix all notebook outputs again. Notice that the output messages have changed
+hello.ipynb: outputs matched, no update needed
+sorting.ipynb: outputs matched, no update needed
+> 'diff -r showcase/demo/current showcase/demo/fixed' should produce no output because all files match
+> restore showcase/demo/current to its initial status

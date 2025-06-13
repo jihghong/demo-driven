@@ -1,0 +1,38 @@
+> 'ddrun -d' to show target directory
+Current target directory: "showcase"
+> 'ddrun -d -a' to show target directory and -a is ignored
+Current target directory: "showcase"
+> 'ddrun -d example -a' to set target directory and -a is ignored
+Target directory is set to "example"
+> 'ddrun -d target redundant unused superfluous' to test redundant arguments
+Target directory is set to "target", extra arguments ignored
+> 'ddrun -d' to show target directory after testing redundant arguments
+Current target directory: "target"
+> 'cat .dddir' to show file content
+target
+> 'rm .dddir' to remove the .dddir file
+> 'ddrun -d' to show target directory. After .dddir is removed, this should show the default value
+Current target directory: "demo"
+> 'ddrun -d usage' to set target directory
+Target directory is set to "usage"
+> 'ddrun -d' to show target directory after setting it
+Current target directory: "usage"
+> 'ddnbo -d' to show target directory. Note that ddnbo also reads .dddir for target directory setting
+Current target directory: "usage"
+> 'ddnbo -d -f -F' to show target directory and -f -F are ignored
+Current target directory: "usage"
+> 'ddnbo -d example -f -F' to set target directory and -f -F are ignored
+Target directory is set to "example"
+> 'ddnbo -d target redundant unused superfluous' to test redundant arguments
+Target directory is set to "target", extra arguments ignored
+> 'ddnbo -d' to show target directory after testing redundant arguments
+Current target directory: "target"
+> 'rm .dddir' to remove .dddir file
+> 'ddnbo -d' to show target directory. After .dddir is removed, this should show the default value
+Current target directory: "demo"
+> 'ddnbo -d example' to set target directory
+Target directory is set to "example"
+> 'ddnbo -d' to show target directory after setting it
+Current target directory: "example"
+> 'ddrun -d' to show target dirctory, which was changed by a different program 'ddnbo'
+Current target directory: "example"

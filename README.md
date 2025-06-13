@@ -15,6 +15,7 @@ Demo-Driven Development made easy.
 - Drive development through exploratory demo scripts
 - Persist preferred demo directory in `.dddir`
 - Includes `ddnbo`, a tool for checking and fixing notebook outputs to match actual execution
+- Supports user-defined evokers to run additional types of demo scripts beyond .py and .ipynb, such as shell and PowerShell scripts.
 
 ---
 
@@ -134,7 +135,7 @@ This will forcefully execute all code cells and update outputs in every notebook
    - Run `ddnbo -f` to fix only the notebooks with mismatched cells
    - Run `ddnbo -F` to force all outputs to be regenerated
 
-For a full real-world example, see the [demo/](demo/) subdirectory.
+For more examples, explore the [showcase/](showcase/) directory. It includes demo scripts created for this project, along with shell scripts that help automate common demo workflows.
 
 ---
 
@@ -168,6 +169,7 @@ While TDD excels in enforcing correctness through assertions, it can become burd
 
 DDD offers a lighter-weight alternative. You capture behavior by example, and decide whether to accept changes after visually reviewing HTML diffs. This allows more fluid evolution of code, especially in early-stage or rapidly changing systems.
 
+---
 
 ## License
 

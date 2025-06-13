@@ -2,211 +2,213 @@ import argparse
 import difflib
 import subprocess
 import sys
+import shlex
+import re
 from pathlib import Path
-import nbformat
-from nbclient import NotebookClient
-import asyncio
+import fnmatch
 
 if sys.platform.startswith("win"):
+    import asyncio
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 TARGET_DIR_FILE = ".dddir"
+EXTENSION_MAP_FILE = "ddrun.ini"
+RESERVED_SUFFIXES = {".txt", ".html", ".old", ".ini"}
+PATH_TOKEN = "DDRUN___PATH___DDRUN"
+PYTHON_TOKEN = "DDRUN___PYTHON___DDRUN"
 
-def save_dir_config(demo_dir: Path):
-    relative = demo_dir.relative_to(Path.cwd())
-    Path(TARGET_DIR_FILE).write_text(str(relative))
-    print(f"Target directory is set to '{relative}'")
+SUPPRESSED_PATTERN = re.compile(r"^.*Assertion failed: .+ \[\d+\] \(.+?:\d+\).*\n?", re.MULTILINE)
 
-def load_dir_config() -> Path:
+def load_extension_map():
+    extmap = {}
+    path = Path(EXTENSION_MAP_FILE)
+    if path.exists():
+        for line in path.read_text().splitlines():
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if "=" not in line:
+                print(f"Invalid line in {EXTENSION_MAP_FILE}: {line}")
+                continue
+            ext, cmd = line.split("=", 1)
+            ext = ext.strip()
+            cmd = cmd.strip()
+            if not ext.startswith("."):
+                ext = "." + ext
+            if ext in RESERVED_SUFFIXES:
+                print(f"Error: extension {ext} is reserved and cannot be redefined")
+                sys.exit(1)
+            tokens = shlex.split(cmd, comments=True)
+            tokens = [
+                PYTHON_TOKEN if t == "{python}" else PATH_TOKEN if t == "{path}" else t
+                for t in tokens
+            ]
+            extmap[ext] = tokens
+
+    if ".py" not in extmap:
+        extmap[".py"] = [PYTHON_TOKEN, PATH_TOKEN]
+
+    if ".ipynb" not in extmap:
+        extmap[".ipynb"] = [PYTHON_TOKEN, "-m", "demo_driven.ddnb", PATH_TOKEN]
+
+    return extmap
+
+def generate_supported_extensions_help():
+    extmap = load_extension_map()
+    text = "\nSupported extensions (configurable via ddrun.ini):\n\n"
+    for ext, tokens in extmap.items():
+        if ext in RESERVED_SUFFIXES:
+            continue
+        cmdline = shlex.join(tokens)
+        cmdline = cmdline.replace(PYTHON_TOKEN, "{python}").replace(PATH_TOKEN, "{path}")
+        text += f"{ext.lstrip('.')} = {cmdline}\n"
+    return text
+
+def save_dir_config(demo_dir_str: str):
+    Path(TARGET_DIR_FILE).write_text(demo_dir_str)
+    return demo_dir_str
+
+def load_dir_config() -> str:
     try:
-        name = Path(TARGET_DIR_FILE).read_text().strip()
-        return Path.cwd() / name
+        return Path(TARGET_DIR_FILE).read_text().strip()
     except FileNotFoundError:
-        return Path.cwd() / "demo"
+        return "demo"
 
-def run_demo(name: str, demo_dir: Path):
-    py_file = demo_dir / f"{name}.py"
-    out_file = demo_dir / f"{name}.py.txt"
-    html_file = demo_dir / f"{name}.py.html"
-    old_file = demo_dir / f"{name}.py.txt.old"
+def is_executable_script(file: Path, extmap):
+    if file.suffix in RESERVED_SUFFIXES:
+        return False
+    return file.suffix in extmap
 
-    if not py_file.exists():
-        print(f"{name}.py: script not found")
-        return
+def run_script(name: str, demo_dir: str, extmap, original_dddir: str):
+    for ext, tokens in extmap.items():
+        file = Path(demo_dir) / f"{name}{ext}"
+        if not file.exists():
+            continue
 
-    result = subprocess.run(
-        [sys.executable, str(py_file)],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True
-    )
-    output = result.stdout
+        out_file = Path(demo_dir) / f"{name}{ext}.txt"
+        html_file = Path(demo_dir) / f"{name}{ext}.html"
+        old_file = Path(demo_dir) / f"{name}{ext}.txt.old"
 
-    if not out_file.exists():
-        out_file.write_text(output)
-        print(f"{name}.py: output saved")
-        return
+        cmd = [
+            sys.executable if t == PYTHON_TOKEN else str(file) if t == PATH_TOKEN else t
+            for t in tokens
+        ]
 
-    if old_file.exists():
-        baseline = old_file.read_text()
-    else:
-        baseline = out_file.read_text()
+        result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        output = result.stdout
+        output = SUPPRESSED_PATTERN.sub("", output)
 
-    if output == baseline:
-        print(f"{name}.py: output matches saved result")
-        if old_file.exists():
-            old_file.replace(out_file)
-        for f in [html_file, old_file]:
-            if f.exists():
-                f.unlink()
-    else:
-        if not old_file.exists():
-            out_file.rename(old_file)
-        out_file.write_text(output)
+        if not out_file.exists():
+            out_file.write_text(output)
+            print(f"{name}{ext}: output saved")
+        else:
+            if old_file.exists():
+                baseline = old_file.read_text()
+            else:
+                baseline = out_file.read_text()
 
-        html = difflib.HtmlDiff().make_file(
-            baseline.splitlines(), output.splitlines(),
-            fromdesc=f"previous output ({name}.py.txt.old)",
-            todesc=f"current output ({name}.py.txt)"
-        )
+            if output == baseline:
+                print(f"{name}{ext}: output matches saved result")
+                if old_file.exists():
+                    old_file.replace(out_file)
+                for f in [html_file, old_file]:
+                    if f.exists():
+                        f.unlink()
+            else:
+                if not old_file.exists():
+                    out_file.rename(old_file)
+                out_file.write_text(output)
+                html = difflib.HtmlDiff().make_file(
+                    baseline.splitlines(), output.splitlines(),
+                    fromdesc=f"previous output ({name}{ext}.txt.old)",
+                    todesc=f"current output ({name}{ext}.txt)"
+                )
+                html_file.write_text(html, encoding="utf-8")
+                print(f"{name}{ext}: output changed, see {html_file.name}")
 
-        html_file.write_text(html, encoding="utf-8")
-        print(f"{name}.py: output changed, see {html_file.name}")
+        if original_dddir is not None:
+            Path(TARGET_DIR_FILE).write_text(original_dddir)
+        else:
+            Path(TARGET_DIR_FILE).unlink(missing_ok=True)
 
-def run_ipynb_demo(name: str, demo_dir: Path):
-    ipynb_file = demo_dir / f"{name}.ipynb"
-    if not ipynb_file.exists():
-        print(f"{name}.ipynb: notebook not found")
-        return
+def accept_script(name: str, demo_dir: str, extmap):
+    accepted = False
+    for ext in extmap:
+        script_file = Path(demo_dir) / f"{name}{ext}"
+        if script_file.exists():
+            found = False
+            for suffix in [".txt.old", ".html"]:
+                file = Path(demo_dir) / f"{name}{ext}{suffix}"
+                if file.exists():
+                    file.unlink()
+                    found = True
+            if found:
+                print(f"{name}{ext}: accepted")
+                accepted = True
+            else:
+                print(f"{name}{ext}: nothing to accept")
 
-    out_file = demo_dir / f"{name}.ipynb.txt"
-    html_file = demo_dir / f"{name}.ipynb.html"
-    old_file = demo_dir / f"{name}.ipynb.txt.old"
-
-    nb = nbformat.read(ipynb_file, as_version=4)
-    client = NotebookClient(nb)
-    client.execute()
-
-    outputs = []
-    for cell in nb.cells:
-        if cell.cell_type == "code":
-            for output in cell.get("outputs", []):
-                if output.output_type == "stream":
-                    outputs.append(output.text)
-                elif output.output_type in ("execute_result", "display_data"):
-                    data = output.get("data", {})
-                    text = data.get("text/plain")
-                    if text:
-                        outputs.append(text)
-                elif output.output_type == "error":
-                    outputs.append("\n".join(output.get("traceback", [])))
-
-    output = "\n".join(outputs)
-
-    if not out_file.exists():
-        out_file.write_text(output)
-        print(f"{name}.ipynb: output saved")
-        return
-
-    if old_file.exists():
-        baseline = old_file.read_text()
-    else:
-        baseline = out_file.read_text()
-
-    if output == baseline:
-        print(f"{name}.ipynb: output matches saved result")
-        if old_file.exists():
-            old_file.replace(out_file)
-        for f in [html_file, old_file]:
-            if f.exists():
-                f.unlink()
-    else:
-        if not old_file.exists():
-            out_file.rename(old_file)
-        out_file.write_text(output)
-
-        html = difflib.HtmlDiff().make_file(
-            baseline.splitlines(), output.splitlines(),
-            fromdesc=f"previous output ({name}.ipynb.txt.old)",
-            todesc=f"current output ({name}.ipynb.txt)"
-        )
-
-        html_file.write_text(html, encoding="utf-8")
-        print(f"{name}.ipynb: output changed, see {html_file.name}")
-
-def accept_demo(name: str, demo_dir: Path, suffix: str):
-    removed = False
-    if suffix == ".py":
-        exts = ["py.txt.old", "py.html"]
-    elif suffix == ".ipynb":
-        exts = ["ipynb.txt.old", "ipynb.html"]
-    else:
-        exts = []
-
-    for ext in exts:
-        file = demo_dir / f"{name}.{ext}"
-        if file.exists():
-            file.unlink()
-            removed = True
-
-    if removed:
-        print(f"{name}{suffix}: accepted")
-    else:
-        print(f"{name}{suffix}: nothing to accept")
-
-def run_all(demo_dir: Path):
-    files = sorted(list(demo_dir.glob("*.py")) + list(demo_dir.glob("*.ipynb")))
-    for file in files:
-        name = file.stem
-        if file.suffix == ".py":
-            run_demo(name, demo_dir)
-        elif file.suffix == ".ipynb":
-            run_ipynb_demo(name, demo_dir)
-
-def accept_all(demo_dir: Path):
-    files = sorted(list(demo_dir.glob("*.py")) + list(demo_dir.glob("*.ipynb")))
-    for file in files:
-        name = file.stem
-        if file.suffix == ".py":
-            accept_demo(name, demo_dir, suffix=".py")
-        elif file.suffix == ".ipynb":
-            accept_demo(name, demo_dir, suffix=".ipynb")
+def accept_all(demo_dir: str, extmap):
+    all_files = Path(demo_dir).glob("*")
+    script_names = set(f.stem for f in all_files if is_executable_script(f, extmap))
+    for name in sorted(script_names):
+        accept_script(name, demo_dir, extmap)
 
 def main():
-    parser = argparse.ArgumentParser(description="Run demo scripts and manage their outputs")
+    parser = argparse.ArgumentParser(
+        description="Run demo scripts and manage their outputs",
+        epilog=generate_supported_extensions_help(),
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("names", nargs="*", help="Run the specified demo scripts, or run all if none are specified")
     parser.add_argument("-a", "--accept", action="store_true", help="Accept the outputs of specified demo scripts, or accept all if none are specified")
-    parser.add_argument("-d", "--dir", help="Set the target directory containing demo scripts")
+    parser.add_argument("-d", "--dir", nargs="?", const="", help="Set or show the target directory containing demo scripts")
     args = parser.parse_args()
 
-    if args.dir:
-        demo_dir = Path.cwd() / args.dir
-        save_dir_config(demo_dir)
+    if args.dir is not None:
+        if args.dir.strip() == "":
+            current = Path(TARGET_DIR_FILE).read_text().strip() if Path(TARGET_DIR_FILE).exists() else "demo"
+            print(f'Current target directory: "{current}"')
+        else:
+            result = save_dir_config(args.dir)
+            if args.names:
+                print(f'Target directory is set to "{result}", extra arguments ignored')
+            else:
+                print(f'Target directory is set to "{result}"')
         return
 
-    demo_dir = load_dir_config()
+    original_dddir = Path(TARGET_DIR_FILE).read_text() if Path(TARGET_DIR_FILE).exists() else None
 
-    if args.accept:
+    try:
+        extmap = load_extension_map()
+        demo_dir = load_dir_config()
+
+        if args.accept:
+            if args.names:
+                for name in args.names:
+                    accept_script(name, demo_dir, extmap)
+            else:
+                accept_all(demo_dir, extmap)
+            return
+
         if args.names:
-            for name in args.names:
-                if (demo_dir / f"{name}.py").exists():
-                    accept_demo(name, demo_dir, suffix=".py")
-                if (demo_dir / f"{name}.ipynb").exists():
-                    accept_demo(name, demo_dir, suffix=".ipynb")
-                if not (demo_dir / f"{name}.py").exists() and not (demo_dir / f"{name}.ipynb").exists():
-                    print(f"{name}: script not found")
+            all_files = list(Path(demo_dir).glob("*"))
+            script_names = set()
+            for pattern in args.names:
+                matches = [f.stem for f in all_files if fnmatch.fnmatch(f.name, pattern + ".*") and is_executable_script(f, extmap)]
+                if not matches:
+                    print(f"{pattern}: not found")
+                script_names.update(matches)
+            for name in sorted(script_names):
+                run_script(name, demo_dir, extmap, original_dddir)
         else:
-            accept_all(demo_dir)
-    elif args.names:
-        for name in args.names:
-            if (demo_dir / f"{name}.py").exists():
-                run_demo(name, demo_dir)
-            if (demo_dir / f"{name}.ipynb").exists():
-                run_ipynb_demo(name, demo_dir)
-            if not (demo_dir / f"{name}.py").exists() and not (demo_dir / f"{name}.ipynb").exists():
-                print(f"{name}: script not found")
-    else:
-        run_all(demo_dir)
+            all_files = Path(demo_dir).glob("*")
+            script_names = set(f.stem for f in all_files if is_executable_script(f, extmap))
+            for name in sorted(script_names):
+                run_script(name, demo_dir, extmap, original_dddir)
+
+    finally:
+        pass
 
 if __name__ == "__main__":
     main()
