@@ -20,12 +20,14 @@ dependencies = [
     "nbformat",
     "nbclient",
     "ipykernel",
-    "jupytext"
+    "jupytext",
+    "coverage"
 ]
 
 [project.scripts]
 ddrun = "demo_driven.ddrun:main"
 ddnbo = "demo_driven.ddnb:ddnbo"
+ddcov = "demo_driven.ddrun:ddcov"
 
 [tool.setuptools]
 packages = ["demo_driven"]

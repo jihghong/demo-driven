@@ -4,6 +4,7 @@ import subprocess
 import sys
 import shlex
 import re
+import os
 from pathlib import Path
 import fnmatch
 
@@ -17,7 +18,24 @@ RESERVED_SUFFIXES = {".txt", ".html", ".old", ".ini"}
 PATH_TOKEN = "DDRUN___PATH___DDRUN"
 PYTHON_TOKEN = "DDRUN___PYTHON___DDRUN"
 
-SUPPRESSED_PATTERN = re.compile(r"^.*Assertion failed: .+ \[\d+\] \(.+?:\d+\).*\n?", re.MULTILINE)
+SUPPRESSED_PATTERNS = [
+    re.compile(r"^.*Assertion failed: .+ \[\d+\] \(.+?:\d+\).*\n?", re.MULTILINE),
+    re.compile(
+        r"^.*coverage.control.py:\d+: CoverageWarning: No data was collected.*\n\s+self._warn\(.*\).*$\n?",
+        re.MULTILINE,
+    ),
+]
+
+def wrap_coverage_if_needed(tokens):
+    if os.environ.get("DEMO_DRIVEN_WITH_COVERAGE") != "1":
+        return tokens
+    try:
+        idx = tokens.index(PYTHON_TOKEN)
+        if idx + 1 < len(tokens) and tokens[idx + 1] == "-c":
+            return tokens  # skip coverage for -c commands
+        return ["coverage", "run"] + tokens[idx + 1:]
+    except ValueError:
+        return tokens
 
 def load_extension_map():
     extmap = {}
@@ -89,6 +107,7 @@ def run_script(name: str, demo_dir: str, extmap, original_dddir: str):
         html_file = Path(demo_dir) / f"{name}{ext}.html"
         old_file = Path(demo_dir) / f"{name}{ext}.txt.old"
 
+        tokens = wrap_coverage_if_needed(tokens)
         cmd = [
             sys.executable if t == PYTHON_TOKEN else str(file) if t == PATH_TOKEN else t
             for t in tokens
@@ -96,7 +115,8 @@ def run_script(name: str, demo_dir: str, extmap, original_dddir: str):
 
         result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
         output = result.stdout
-        output = SUPPRESSED_PATTERN.sub("", output)
+        for pattern in SUPPRESSED_PATTERNS:
+            output = pattern.sub("", output)
 
         if not out_file.exists():
             out_file.write_text(output)
@@ -154,11 +174,12 @@ def accept_all(demo_dir: str, extmap):
     for name in sorted(script_names):
         accept_script(name, demo_dir, extmap)
 
-def main():
+def main(coverage=False):
     parser = argparse.ArgumentParser(
-        description="Run demo scripts and manage their outputs",
+        description="Run demo scripts and manage outputs, and collect execution coverage" if coverage else "Run demo scripts and manage their outputs",
         epilog=generate_supported_extensions_help(),
-        formatter_class=argparse.RawDescriptionHelpFormatter
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        prog="ddcov" if coverage else "ddrun"
     )
     parser.add_argument("names", nargs="*", help="Run the specified demo scripts, or run all if none are specified")
     parser.add_argument("-a", "--accept", action="store_true", help="Accept the outputs of specified demo scripts, or accept all if none are specified")
@@ -209,6 +230,10 @@ def main():
 
     finally:
         pass
+
+def ddcov():
+    os.environ["DEMO_DRIVEN_WITH_COVERAGE"] = "1"
+    main(coverage=True)
 
 if __name__ == "__main__":
     main()
