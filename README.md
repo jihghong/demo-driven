@@ -2,26 +2,23 @@
 
 Demo-Driven Development made easy.
 
-`demo-driven` is a lightweight CLI tool that encourages writing executable, verifiable demo scripts alongside your codebase. These demos serve as working examples, documentation, and regression test anchors—all in one place.
+`demo-driven` is a lightweight CLI tool that encourages writing executable, verifiable demo scripts alongside your codebase. These demos serve as working examples, documentation, and regression test anchors, all in one place.
 
 ---
 
 ## Features
 
-- Captures and stores printed output from demo scripts (`.py`) and Jupyter notebooks (`.ipynb`)
-- Lock in output results for future refactor safety
-- Generates `.html` and `.txt.old` files when behavior changes
-- Accept new behavior only when explicitly reviewed
-- Drive development through exploratory demo scripts
-- Persist preferred demo directory in `.dddir`
+- Captures and stores printed output from demo scripts (`.py`), Jupyter notebooks (`.ipynb`), and bash scripts (`.sh`)
+- Generates `.html` diffs when output results change
+- Lets users decide whether to accept new output after reviewing differences
 - Includes `ddnbo`, a tool for checking and fixing notebook outputs to match actual execution
-- Supports user-defined evokers to run additional types of demo scripts beyond .py and .ipynb, such as shell and PowerShell scripts.
+- Includes `ddcov`, a tool for executing demo scripts and collecting code coverage information
 
 ---
 
 ## Installation
 
-```bash
+```
 pip install demo-driven
 ```
 
@@ -31,7 +28,7 @@ pip install demo-driven
 
 ### Run a demo
 
-```bash
+```
 ddrun hello
 ```
 
@@ -39,26 +36,39 @@ This runs `demo/hello.py` or `demo/hello.ipynb` and compares the output against 
 
 If the corresponding `.txt` file does not exist, it will be created with the current output.
 If the output has changed since the last run:
-- The old `.txt` file will be renamed to `.txt.old` (e.g., `hello.py.txt.old`)
+- The old `.txt` file will be renamed to `.tx~` (e.g., `hello.py.tx~`)
 - A visual diff will be generated and saved as `.html` for you to review in a browser
+
+You can also use wildcards to specify demos, for example:
+
+```
+ddrun h?l*o
+```
+
+When both hello.py and hello.ipynb exist, but you only want to run one of them, you can include the file extension in the pattern:
+
+```
+ddrun h?l*o.ipynb
+```
+
 
 ### Accept new output
 
-```bash
+```
 ddrun -a hello
 ```
 
-Accepts the current result and deletes `.txt.old` and `.html` to mark it as reviewed.
+Accepts the current result and deletes `.tx~` and `.html` to mark it as reviewed.
 
 ### Run all demos
 
-```bash
+```
 ddrun
 ```
 
 ### Accept all new outputs
 
-```bash
+```
 ddrun -a
 ```
 
@@ -66,7 +76,7 @@ This will check all demos and either accept the new output or confirm that nothi
 
 ### Use a custom demo directory
 
-```bash
+```
 ddrun -d examples
 ```
 
@@ -85,7 +95,7 @@ If you have previously run `ddrun -d demo`, the same `.dddir` setting applies to
 
 ### Check notebook outputs
 
-```bash
+```
 ddnbo
 ```
 
@@ -98,7 +108,7 @@ sorting.ipynb: [2][3][4][5] mismatched
 
 ### Fix mismatched outputs or keep untouched
 
-```bash
+```
 ddnbo -f
 ```
 
@@ -111,11 +121,41 @@ sorting.ipynb: outputs updated
 
 ### Force update all outputs
 
-```bash
+```
 ddnbo -F
 ```
 
 This will forcefully execute all code cells and update outputs in every notebook.
+
+---
+
+## Coverage Collector
+
+The `ddcov` command runs your demo scripts and collects code coverage information using the coverage.py library.
+
+It helps you understand how much of your code is exercised by your demos.
+
+### Run and collect coverage
+
+The usage is similar to ddrun, and you can use the following commands.
+
+```
+ddcov -d
+ddcov -d showcase
+ddcov
+ddcov h?l*o.ipynb
+```
+
+This will execute all matching demos and generate a `.coverage` file in the current directory.
+
+### Coverage report
+
+You can then use standard `coverage` tools to inspect summary results or generate html reports, such as:  
+
+```
+coverage report
+coverage html
+```
 
 ---
 
@@ -125,7 +165,7 @@ This will forcefully execute all code cells and update outputs in every notebook
 2. Run them with `ddrun hello`, `ddrun sorting`, or simply `ddrun` to run all demos
 3. The printed output will be saved into `.txt` files (e.g., `demo/hello.py.txt`, `demo/sorting.ipynb.txt`)
 4. If you modify your code and the output changes:
-   - A `.txt.old` file will preserve the previous result
+   - A `.tx~` file will preserve the previous result
    - An `.html` file will help visualize the differences
 
 5. If the output changed because of an intentional update, accept the result using `ddrun -a hello` or `ddrun -a`
@@ -141,11 +181,14 @@ For more examples, explore the [showcase/](showcase/) directory. It includes dem
 
 ## Philosophy
 
-> **Write your demo before your code.**  
-> Use the demo to shape your interface, guide your implementation, and clarify your intent—before you write a single function.
+> **Write demo before code.**
+> Before implementing anything, writing a demo helps clarify your intent, explore your interface, and give your implementation a clear direction.
 
-> **Lock in behavior with output.**  
-> When your program prints something, it reflects what it does. By capturing that output as a reference, you create a stable baseline. Any future difference means something changed—and that change deserves your attention.
+> **Output serves as baseline.**
+> Printed output reflects your program's behavior. By capturing and keeping it as reference, you create a stable baseline. Any unexpected change in the output may reveal a mistake.
+
+> **Evolve with minimal overhead.**
+> When you change your program's logic, it is simpler and faster to move forward by reviewing the new output and accepting it, rather than maintaining and rewriting a forest of assertion code.
 
 ### Comparison with Test-Driven Development
 
@@ -165,7 +208,7 @@ The key difference lies in **what is written** and **how behavior is captured**:
 | Maintenance cost    | High: test logic must evolve with code    | Low: only accept updated output when needed |
 | Ideal for           | Systems with stable, mature logic         | Systems still evolving, where behavior is in flux but output can be meaningfully reviewed  |
 
-While TDD excels in enforcing correctness through assertions, it can become burdensome as the number of test cases grows. When logic changes, test files often need to be manually rewritten to reflect new expectations—leading to significant friction and a fear of refactoring.
+While TDD excels in enforcing correctness through assertions, it can become burdensome as the number of test cases grows. When logic changes, test files often need to be manually rewritten to reflect new expectations. This leads to significant friction and a fear of refactoring.
 
 DDD offers a lighter-weight alternative. You capture behavior by example, and decide whether to accept changes after visually reviewing HTML diffs. This allows more fluid evolution of code, especially in early-stage or rapidly changing systems.
 

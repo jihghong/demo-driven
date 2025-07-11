@@ -1,5 +1,0 @@
-0,0-0,0:            ENCODING       'utf-8'        
-1,0-1,5:            NAME           'hello'        
-1,6-1,11:           NAME           'world'        
-1,11-1,12:          NEWLINE        ''             
-2,0-2,0:            ENDMARKER      ''             

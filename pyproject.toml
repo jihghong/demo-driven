@@ -21,13 +21,15 @@ dependencies = [
     "nbclient",
     "ipykernel",
     "jupytext",
-    "coverage"
+    "coverage",
+    "bashlex"
 ]
 
 [project.scripts]
 ddrun = "demo_driven.ddrun:main"
-ddnbo = "demo_driven.ddnb:ddnbo"
-ddcov = "demo_driven.ddrun:ddcov"
+ddnbo = "demo_driven.ddnbo:main"
+ddcov = "demo_driven.ddcov:main"
+tocov = "demo_driven.ddcov:tocov"
 
 [tool.setuptools]
 packages = ["demo_driven"]

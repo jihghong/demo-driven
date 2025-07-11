@@ -45,7 +45,7 @@ sorting.ipynb: output changed, see sorting.ipynb.html
 sorting.py: output changed, see sorting.py.html
 ```
 
-The output of each script is updated in `*.txt`, while the previous baseline is preserved as `.old` files. You can open the corresponding `.html` files to visually inspect the differences.
+The output of each script is updated in `*.txt`, while the previous baseline is preserved as `.tx~` files. You can open the corresponding `.html` files to visually inspect the differences.
 
 At this point, the directory becomes like the contents of `showcase/demo/modified/`.
 
@@ -64,7 +64,7 @@ sorting.ipynb: output matches saved result
 sorting.py: output matches saved result
 ```
 
-Regardless of code changes, identical output is treated as a reversion to the original behavior. `.old` and `.html` files are automatically deleted upon detecting the match.
+Regardless of code changes, identical output is treated as a reversion to the original behavior. `.tx~` and `.html` files are automatically deleted upon detecting the match.
 
 As a result, the directory now becomes like the contents of `showcase/demo/reverted/`.
 
@@ -79,7 +79,7 @@ sorting.ipynb: accepted
 sorting.py: accepted
 ```
 
-The changes are confirmed and accepted. `.txt` files are updated with the new output. `.old` and `.html` files are automatically deleted. This represents a new stable state where updated behavior is locked in.
+The changes are confirmed and accepted. `.txt` files are updated with the new output. `.tx~` and `.html` files are automatically deleted. This represents a new stable state where updated behavior is locked in.
 
 If you run `ddrun -a` again after accepting, you will see:
 

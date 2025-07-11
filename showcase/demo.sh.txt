@@ -65,7 +65,7 @@ sorting.ipynb: [2][3][4][5] mismatched
 hello.ipynb: outputs updated
 sorting.ipynb: outputs updated
 > 'ddnbo -f' to fix all notebook outputs again. Notice that the output messages have changed
-hello.ipynb: outputs matched, no update needed
-sorting.ipynb: outputs matched, no update needed
+hello.ipynb: no need to update
+sorting.ipynb: no need to update
 > 'diff -r showcase/demo/current showcase/demo/fixed' should produce no output because all files match
 > restore showcase/demo/current to its initial status

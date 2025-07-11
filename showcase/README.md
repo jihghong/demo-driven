@@ -10,7 +10,7 @@ The default folder for `ddrun` is `demo`. Other common names include `example`, 
 
 To run all demos in this folder:
 
-```sh
+```
 ddrun -d showcase
 ddrun
 ```
@@ -21,6 +21,22 @@ The result will be:
 demo.sh: output matches saved result
 nested.sh: output matches saved result
 option_d.sh: output matches saved result
+```
+
+## Running the showcase and collect coverage
+
+To collect coverage data while running demos, simply replace all previous `ddrun` commands with `ddcov`.
+
+```
+ddcov -d showcase
+ddcov
+```
+
+Then use the coverage tool to inspect results or generate reports:
+
+```
+coverage report
+coverage html
 ```
 
 ## Contents
@@ -50,9 +66,3 @@ option_d.sh: output matches saved result
 ### `nested1/`, `nested2/`
 
   Support the nested script example. These directories validate deep nesting and `.dddir` context propagation.
-
-### `extension/`
-
-  Shows how to extend `ddrun` via `ddrun.ini` with custom file handlers.
-
-  See [showcase/extension/README.md](extension/README.md) for configuration and usage details.
