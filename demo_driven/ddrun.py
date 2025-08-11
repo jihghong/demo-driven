@@ -23,7 +23,7 @@ def load_target_dir_config():  # -> original_dddir, demo_dir
     try:
         return (demo_dir := TARGET_DIR_FILE.read_text().strip()), demo_dir
     except:
-        return None, "demo"
+        return None, "showcase"
 
 def save_dir_config(args_dir: str):
     TARGET_DIR_FILE.write_text(args_dir)

@@ -19,7 +19,7 @@ Demo-Driven Development made easy.
 ## Installation
 
 ```
-pip install demo-driven
+pip install git+https://github.com/jihghong/demo-driven
 ```
 
 ---

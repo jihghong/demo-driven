@@ -12,7 +12,7 @@ Current target directory: "target"
 target
 > 'rm .dddir' to remove the .dddir file
 > 'ddrun -d' to show target directory. After .dddir is removed, this should show the default value
-Current target directory: "demo"
+Current target directory: "showcase"
 > 'ddrun -d usage' to set target directory
 Target directory is set to "usage"
 > 'ddrun -d' to show target directory after setting it
@@ -29,7 +29,7 @@ Target directory is set to "target", extra arguments ignored
 Current target directory: "target"
 > 'rm .dddir' to remove .dddir file
 > 'ddnbo -d' to show target directory. After .dddir is removed, this should show the default value
-Current target directory: "demo"
+Current target directory: "showcase"
 > 'ddnbo -d example' to set target directory
 Target directory is set to "example"
 > 'ddnbo -d' to show target directory after setting it
