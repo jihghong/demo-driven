@@ -1,3 +1,4 @@
+import os
 import sys
 from pathlib import Path
 import argparse
@@ -19,6 +20,9 @@ if sys.platform.startswith("win"):  # nbclient issue #128, pyzmq issue #1554
 
 TARGET_DIR_FILE = Path(".dddir")
 DEFAULT_TEXT_ENCODING = "utf-8"
+PYTHON_UTF8_ENV = os.environ.copy()
+PYTHON_UTF8_ENV.setdefault("PYTHONUTF8", "1")
+PYTHON_UTF8_ENV.setdefault("PYTHONIOENCODING", DEFAULT_TEXT_ENCODING)
 
 def load_target_dir_config():  # -> original_dddir, demo_dir
     try:
@@ -103,7 +107,8 @@ def run_script(script_file: Path):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
-                encoding=DEFAULT_TEXT_ENCODING
+                encoding=DEFAULT_TEXT_ENCODING,
+                env=PYTHON_UTF8_ENV
             ).stdout
         case ".ipynb":
             nb = read_notebook(script_file)

@@ -66,3 +66,7 @@ coverage html
 ### `nested1/`, `nested2/`
 
   Support the nested script example. These directories validate deep nesting and `.dddir` context propagation.
+
+### `unicode.py`
+
+  Emits a single line that mixes emoji, mathematical symbols, and other non-ASCII glyphs to test utf-8 handling.
