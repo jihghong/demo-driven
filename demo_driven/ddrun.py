@@ -18,21 +18,22 @@ if sys.platform.startswith("win"):  # nbclient issue #128, pyzmq issue #1554
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 TARGET_DIR_FILE = Path(".dddir")
+DEFAULT_TEXT_ENCODING = "utf-8"
 
 def load_target_dir_config():  # -> original_dddir, demo_dir
     try:
-        return (demo_dir := TARGET_DIR_FILE.read_text().strip()), demo_dir
+        return (demo_dir := TARGET_DIR_FILE.read_text(encoding=DEFAULT_TEXT_ENCODING).strip()), demo_dir
     except:
         return None, "showcase"
 
 def save_dir_config(args_dir: str):
-    TARGET_DIR_FILE.write_text(args_dir)
+    TARGET_DIR_FILE.write_text(args_dir, encoding=DEFAULT_TEXT_ENCODING)
 
 def restore_target_dir_config(original_dddir):
     if original_dddir is None:
         TARGET_DIR_FILE.unlink(missing_ok=True)
     else:
-        TARGET_DIR_FILE.write_text(original_dddir)
+        TARGET_DIR_FILE.write_text(original_dddir, encoding=DEFAULT_TEXT_ENCODING)
 
 def set_or_show_target_dir(demo_dir: str, args_dir: str, extra_ignored: bool):
     if args_dir:
@@ -48,7 +49,7 @@ def read_demo_driven_ini():
     config = configparser.ConfigParser()
     ini = Path("demo_driven.ini")
     if ini.exists():
-        config.read(ini)
+        config.read(ini, encoding=DEFAULT_TEXT_ENCODING)
     return config
 
 demo_driven_config = read_demo_driven_ini()
@@ -97,13 +98,25 @@ def notebook_cell_output_text(cell):
 def run_script(script_file: Path):
     match script_file.suffix:
         case ".py":
-            output = subprocess.run([sys.executable, script_file], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True).stdout
+            output = subprocess.run(
+                [sys.executable, script_file],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                encoding=DEFAULT_TEXT_ENCODING
+            ).stdout
         case ".ipynb":
             nb = read_notebook(script_file)
             execute_notebook(nb)
             output = "\n".join(notebook_outputs(nb))
         case ".sh":
-            output = subprocess.run(BASH + [script_file], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True).stdout
+            output = subprocess.run(
+                BASH + [script_file],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                encoding=DEFAULT_TEXT_ENCODING
+            ).stdout
     logger.debug(f"before {output!r}")
     for pattern in SUPPRESSED_PATTERNS:
         output = pattern.sub("", output)
@@ -115,13 +128,13 @@ def save_output_and_diff(script_file: Path, output: str):
     old_file = script_file.with_name(script_file.name + ".tx~")
     html_file = script_file.with_name(script_file.name + ".html")
     if not out_file.exists():
-        out_file.write_text(output)
+        out_file.write_text(output, encoding=DEFAULT_TEXT_ENCODING)
         print(f"{script_file.name}: output saved")
     else:
         if old_file.exists():
-            baseline = old_file.read_text()
+            baseline = old_file.read_text(encoding=DEFAULT_TEXT_ENCODING)
         else:
-            baseline = out_file.read_text()
+            baseline = out_file.read_text(encoding=DEFAULT_TEXT_ENCODING)
         if output == baseline:
             logger.debug(f"{script_file.name}: output matches saved result")
             print(f"{script_file.name}: output matches saved result")
@@ -132,13 +145,13 @@ def save_output_and_diff(script_file: Path, output: str):
         else:
             if not old_file.exists():
                 out_file.rename(old_file)
-            out_file.write_text(output)
+            out_file.write_text(output, encoding=DEFAULT_TEXT_ENCODING)
             html = difflib.HtmlDiff().make_file(
                 baseline.splitlines(), output.splitlines(),
                 fromdesc=f"previous output ({old_file.name})",
                 todesc=f"current output ({out_file.name})"
             )
-            html_file.write_text(html, encoding="utf-8")
+            html_file.write_text(html, encoding=DEFAULT_TEXT_ENCODING)
             logger.debug(f"{script_file.name}: output changed, see {html_file.name}")
             print(f"{script_file.name}: output changed, see {html_file.name}")
 
@@ -161,8 +174,6 @@ def match_pattern(pattern: str, all_files: list[Path]):
     return [f for f in all_files if fnmatch.fnmatch(f.name, pattern) or fnmatch.fnmatch(f.stem, pattern)]
 
 def main():
-    logging.basicConfig(filename='ddrun.log')
-    logger.setLevel(logging.DEBUG)
     parser = argparse.ArgumentParser(
         description="Run demo scripts and manage their outputs",
         formatter_class=argparse.RawDescriptionHelpFormatter

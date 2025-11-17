@@ -8,7 +8,7 @@ import re
 import runpy
 
 from demo_driven.ddrun import (
-    demo_driven_config, BASH,
+    demo_driven_config, BASH, DEFAULT_TEXT_ENCODING,
     load_target_dir_config, set_or_show_target_dir, restore_target_dir_config,
     glob_sorted, match_pattern,
     read_notebook, execute_notebook, notebook_outputs,
@@ -111,7 +111,10 @@ def run_script_with_coverage(script_file: Path):
         case ".py":
             output = subprocess.run(
                 ["coverage", "run", "--parallel-mode", "--omit", script_file, script_file],
-                stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                encoding=DEFAULT_TEXT_ENCODING
             ).stdout
         case ".ipynb":
             nb = read_notebook(script_file)
@@ -119,9 +122,16 @@ def run_script_with_coverage(script_file: Path):
             execute_notebook(nb)
             output = "\n".join(notebook_outputs(nb))
         case ".sh":
-            original = script_file.read_text()
+            original = script_file.read_text(encoding=DEFAULT_TEXT_ENCODING)
             transformed = transform_shell_for_coverage(original)
-            output = subprocess.run(BASH, input=transformed, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True).stdout
+            output = subprocess.run(
+                BASH,
+                input=transformed,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                encoding=DEFAULT_TEXT_ENCODING
+            ).stdout
     logger.debug(f"before {output!r}")
     for pattern in SUPPRESSED_PATTERNS:
         output = pattern.sub("", output)
@@ -129,8 +139,6 @@ def run_script_with_coverage(script_file: Path):
     save_output_and_diff(script_file, output)
 
 def main():
-    logging.basicConfig(filename='ddrun.log')
-    logger.setLevel(logging.DEBUG)
     parser = argparse.ArgumentParser(
         description="Run demo scripts with coverage",
         formatter_class=argparse.RawDescriptionHelpFormatter
