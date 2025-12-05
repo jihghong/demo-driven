@@ -70,3 +70,19 @@ coverage html
 ### `unicode.py`
 
   Emits a single line that mixes emoji, mathematical symbols, and other non-ASCII glyphs to test utf-8 handling.
+
+---
+
+## Jupyter Notebook Showcase
+
+A separate set of demos supporting Jupyter Notebooks (`.ipynb`) is available in the `showcase.jupyter` directory. To run them, you must first have the `[jupyter]` dependencies installed:
+
+```bash
+pip install "git+https://github.com/jihghong/demo-driven#egg=demo-driven[jupyter]"
+```
+
+You can then run the demos by targeting that directory:
+
+```bash
+ddrun -d showcase.jupyter
+```

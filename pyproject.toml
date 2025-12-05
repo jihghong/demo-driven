@@ -4,7 +4,8 @@ version = "0.1.0"
 description = "A lightweight CLI tool that enables Demo-Driven Development in Python."
 authors = [
     { name = "John Lin", email = "jihghong@gmail.com" },
-    { name = "ChatGPT 4o" }
+    { name = "ChatGPT 4o" },
+    { name = "Gemini 5 Pro" }
 ]
 readme = "README.md"
 requires-python = ">=3.7"
@@ -17,12 +18,16 @@ classifiers = [
 ]
 
 dependencies = [
+    "coverage",
+    "bashlex"
+]
+
+[project.optional-dependencies]
+jupyter = [
     "nbformat",
     "nbclient",
     "ipykernel",
-    "jupytext",
-    "coverage",
-    "bashlex"
+    "jupytext"
 ]
 
 [project.scripts]

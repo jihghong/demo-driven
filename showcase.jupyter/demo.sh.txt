@@ -1,0 +1,51 @@
+> initialize showcase.jupyter/demo/current
+> 'ddrun -d showcase.jupyter/demo/current' to set target directory
+Target directory is set to "showcase.jupyter/demo/current"
+> 'ddrun' to run all demo scripts in showcase.jupyter/demo/current
+hello.ipynb: output saved
+sorting.ipynb: output saved
+> 'ddrun' to run all demo scripts again. Notice that the output messages have changed
+hello.ipynb: output matches saved result
+sorting.ipynb: output matches saved result
+> 'diff -r showcase.jupyter/demo/current showcase.jupyter/demo/created' should produce no output because all files match
+> now modify demo scripts
+> 'ddrun' to run all demo scripts in showcase.jupyter/demo/current
+hello.ipynb: output changed, see hello.ipynb.html
+sorting.ipynb: output changed, see sorting.ipynb.html
+> 'ddrun' to run all demo scripts again. Notice that the output messages are the same
+hello.ipynb: output changed, see hello.ipynb.html
+sorting.ipynb: output changed, see sorting.ipynb.html
+> 'diff -r showcase.jupyter/demo/current showcase.jupyter/demo/modified' should produce no output because all files match
+> now revert demo scripts
+> 'ddrun' to run all demo scripts in showcase.jupyter/demo/current
+hello.ipynb: output matches saved result
+sorting.ipynb: output matches saved result
+> 'ddrun' to run all demo scripts again. Notice that the output messages are the same
+hello.ipynb: output matches saved result
+sorting.ipynb: output matches saved result
+> 'diff -r showcase.jupyter/demo/current showcase.jupyter/demo/reverted' should produce no output because all files match
+> now modify demo scripts again
+> 'ddrun' to run all demo scripts in showcase.jupyter/demo/current
+hello.ipynb: output changed, see hello.ipynb.html
+sorting.ipynb: output changed, see sorting.ipynb.html
+> 'ddrun' to run all demo scripts again. Notice that the output messages are the same
+hello.ipynb: output changed, see hello.ipynb.html
+sorting.ipynb: output changed, see sorting.ipynb.html
+> 'ddrun -a' to accept all results in showcase.jupyter/demo/current
+hello.ipynb: accepted
+sorting.ipynb: accepted
+> 'ddrun -a' to accept all demo scripts again. Notice that the output messages have changed
+hello.ipynb: nothing to accept
+sorting.ipynb: nothing to accept
+> 'diff -r showcase.jupyter/demo/current showcase.jupyter/demo/accepted' should produce no output because all files match
+> 'ddnbo' to check all notebook outputs in showcase.jupyter/demo/current
+hello.ipynb: [1] mismatched
+sorting.ipynb: [2][3][4][5] mismatched
+> 'ddnbo -f' to fix all notebook outputs in showcase.jupyter/demo/current
+hello.ipynb: outputs updated
+sorting.ipynb: outputs updated
+> 'ddnbo -f' to fix all notebook outputs again. Notice that the output messages have changed
+hello.ipynb: no need to update
+sorting.ipynb: no need to update
+> 'diff -r showcase.jupyter/demo/current showcase.jupyter/demo/fixed' should produce no output because all files match
+> restore showcase.jupyter/demo/current to its initial status

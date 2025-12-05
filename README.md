@@ -18,8 +18,16 @@ Demo-Driven Development made easy.
 
 ## Installation
 
-```
+For the basic functionality (running `.py` and `.sh` scripts), you can install `demo-driven` directly from GitHub:
+
+```bash
 pip install git+https://github.com/jihghong/demo-driven
+```
+
+To enable support for Jupyter Notebooks (`.ipynb` files), you need to install it with the `[jupyter]` extra dependency group:
+
+```bash
+pip install "git+https://github.com/jihghong/demo-driven#egg=demo-driven[jupyter]"
 ```
 
 ---
@@ -224,3 +232,4 @@ MIT
 
 - **John Lin** – [jihghong@gmail.com](mailto:jihghong@gmail.com)
 - **ChatGPT 4o** – Assistant co-author
+- **Gemini 3 Pro** – Assistant co-author

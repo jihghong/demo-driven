@@ -9,7 +9,7 @@ import re
 import runpy
 
 from demo_driven.ddrun import (
-    demo_driven_config, BASH, DEFAULT_TEXT_ENCODING, PYTHON_UTF8_ENV,
+    demo_driven_config, BASH, DEFAULT_TEXT_ENCODING, get_shell_env,
     load_target_dir_config, set_or_show_target_dir, restore_target_dir_config,
     glob_sorted, match_pattern,
     read_notebook, execute_notebook, notebook_outputs,
@@ -108,6 +108,7 @@ def instrument_python_cell(nb):
             last_python_code_cell.source = "\n".join([last_python_code_cell.source] + cov_suffix)
 
 def run_script_with_coverage(script_file: Path):
+    shell_env = get_shell_env()
     match script_file.suffix:
         case ".py":
             output = subprocess.run(
@@ -116,7 +117,7 @@ def run_script_with_coverage(script_file: Path):
                 stderr=subprocess.STDOUT,
                 text=True,
                 encoding=DEFAULT_TEXT_ENCODING,
-                env=PYTHON_UTF8_ENV
+                env=shell_env
             ).stdout
         case ".ipynb":
             nb = read_notebook(script_file)
@@ -133,7 +134,7 @@ def run_script_with_coverage(script_file: Path):
                 stderr=subprocess.STDOUT,
                 text=True,
                 encoding=DEFAULT_TEXT_ENCODING,
-                env=PYTHON_UTF8_ENV
+                env=shell_env
             ).stdout
     logger.debug(f"before {output!r}")
     for pattern in SUPPRESSED_PATTERNS:

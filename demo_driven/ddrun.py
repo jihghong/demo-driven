@@ -8,11 +8,16 @@ import re
 import shlex
 import fnmatch
 import difflib
-import nbformat
-from nbclient import NotebookClient
 
 import logging
 logger = logging.getLogger(__name__)
+
+try:
+    import nbformat
+    from nbclient import NotebookClient
+    JUPYTER_AVAILABLE = True
+except ImportError:
+    JUPYTER_AVAILABLE = False
 
 if sys.platform.startswith("win"):  # nbclient issue #128, pyzmq issue #1554
     import asyncio
@@ -20,9 +25,22 @@ if sys.platform.startswith("win"):  # nbclient issue #128, pyzmq issue #1554
 
 TARGET_DIR_FILE = Path(".dddir")
 DEFAULT_TEXT_ENCODING = "utf-8"
-PYTHON_UTF8_ENV = os.environ.copy()
-PYTHON_UTF8_ENV.setdefault("PYTHONUTF8", "1")
-PYTHON_UTF8_ENV.setdefault("PYTHONIOENCODING", DEFAULT_TEXT_ENCODING)
+
+def get_shell_env():
+    """Creates a shell environment with the virtualenv bin/Scripts path prepended to PATH."""
+    shell_env = os.environ.copy()
+    shell_env.setdefault("PYTHONUTF8", "1")
+    shell_env.setdefault("PYTHONIOENCODING", DEFAULT_TEXT_ENCODING)
+
+    # Determine the correct directory name for executables
+    exe_dir = "Scripts" if sys.platform.startswith("win") else "bin"
+    venv_exe_path = str(Path(sys.prefix) / exe_dir)
+
+    # Prepend the virtualenv path to the PATH environment variable
+    shell_env["PATH"] = f"{venv_exe_path}{os.pathsep}{shell_env.get('PATH', '')}"
+    return shell_env
+
+PYTHON_UTF8_ENV = get_shell_env()
 
 def load_target_dir_config():  # -> original_dddir, demo_dir
     try:
@@ -120,7 +138,8 @@ def run_script(script_file: Path):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
-                encoding=DEFAULT_TEXT_ENCODING
+                encoding=DEFAULT_TEXT_ENCODING,
+                env=get_shell_env()
             ).stdout
     logger.debug(f"before {output!r}")
     for pattern in SUPPRESSED_PATTERNS:
@@ -173,6 +192,8 @@ def accept_script(script_file: Path):
         print(f"{script_file.name}: nothing to accept")
 
 def glob_sorted(demo_dir: str, order={ ".py":".0", ".ipynb":".1", ".sh":".2" }):
+    if not JUPYTER_AVAILABLE:
+        order.pop(".ipynb", None)
     return sorted([f for f in Path(demo_dir).glob("*") if f.suffix in order], key=lambda f: f.stem + order[f.suffix])
 
 def match_pattern(pattern: str, all_files: list[Path]):

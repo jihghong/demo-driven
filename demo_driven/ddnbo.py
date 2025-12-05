@@ -1,6 +1,8 @@
 import argparse
+import sys
 from pathlib import Path
 from demo_driven.ddrun import (
+    JUPYTER_AVAILABLE,
     load_target_dir_config, set_or_show_target_dir,
     glob_sorted, match_pattern,
     read_notebook, save_notebook, execute_notebook, notebook_cell_output_text
@@ -41,6 +43,11 @@ def compare_and_fix_outputs(ipynb_file: Path, fix: bool, force: bool):
             print(f"{ipynb_file.name}: no need to update")
 
 def main():
+    if not JUPYTER_AVAILABLE:
+        print("To run Jupyter notebooks, please install the jupyter extra dependencies:")
+        print("pip install .[jupyter]")
+        sys.exit(1)
+
     parser = argparse.ArgumentParser(description="Check for mismatches between notebook outputs and actual execution results, with options to fix them.")
     parser.add_argument("names", nargs="*", help="Check the specified notebooks, or check all if none are specified")
     parser.add_argument("-d", "--dir", nargs="?", const="", help="Set or show the target directory containing notebooks.")
