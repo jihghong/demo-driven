@@ -40,7 +40,7 @@ pip install "git+https://github.com/jihghong/demo-driven#egg=demo-driven[jupyter
 ddrun hello
 ```
 
-This runs `demo/hello.py` or `demo/hello.ipynb` and compares the output against `demo/hello.py.txt` or `demo/hello.ipynb.txt`.
+This runs `showcase/hello.py` or `showcase/hello.ipynb` and compares the output against `showcase/hello.py.txt` or `showcase/hello.ipynb.txt`.
 
 If the corresponding `.txt` file does not exist, it will be created with the current output.
 If the output has changed since the last run:
@@ -99,7 +99,7 @@ Future commands (like `ddrun hello`, `ddrun -a`, etc.) will use `examples/` as t
 
 The `ddnbo` command (short for Demo-Driven Notebook Output) checks or updates output cells inside Jupyter notebooks.
 
-If you have previously run `ddrun -d demo`, the same `.dddir` setting applies to `ddnbo`.
+If you have previously run `ddrun -d showcase`, the same `.dddir` setting applies to `ddnbo`.
 
 ### Check notebook outputs
 
@@ -169,9 +169,9 @@ coverage html
 
 ## Example Workflow
 
-1. Write runnable demos in `demo/hello.py`, `demo/sorting.py`, and `demo/sorting.ipynb`
+1. Write runnable demos in `showcase/hello.py`, `showcase/sorting.py`, and `showcase/sorting.ipynb`
 2. Run them with `ddrun hello`, `ddrun sorting`, or simply `ddrun` to run all demos
-3. The printed output will be saved into `.txt` files (e.g., `demo/hello.py.txt`, `demo/sorting.ipynb.txt`)
+3. The printed output will be saved into `.txt` files (e.g., `showcase/hello.py.txt`, `showcase/sorting.ipynb.txt`)
 4. If you modify your code and the output changes:
    - A `.tx~` file will preserve the previous result
    - An `.html` file will help visualize the differences
